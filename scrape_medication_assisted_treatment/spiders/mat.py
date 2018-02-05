@@ -28,6 +28,7 @@ class MatSpider(scrapy.Spider):
         return [
             {
                 "raw": row.extract(),
+                "is_header": row.css("th").extract_first() is not None,
                 "fields": self.parse_fields(row),
             }
             for row in table.css("tr")
@@ -41,4 +42,11 @@ class MatSpider(scrapy.Spider):
                 "clean": field.css("::text").extract_first().strip(),
             }
             for field in row.css("td")
+        ] + [
+            {
+                "raw": field.extract(),
+                "text": field.css("::text").extract(),
+                "clean": field.css("::text").extract_first().strip(),
+            }
+            for field in row.css("th")
         ]
