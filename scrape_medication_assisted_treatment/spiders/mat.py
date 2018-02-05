@@ -16,6 +16,9 @@ class MatSpider(scrapy.Spider):
             "tables": self.parse_tables(response)
         }
 
+        for a in response.css('li.pager__item--next a'):
+            yield response.follow(a, callback=self.parse)
+
     def parse_tables(self, response):
         return [
             {
