@@ -10,6 +10,7 @@ class MatSpider(scrapy.Spider):
 
     def parse(self, response):
         yield {
+            "type": "page",
             "url": response.url,
             "body": response.body.decode(),
             "tables": self.parse_tables(response)
@@ -18,6 +19,7 @@ class MatSpider(scrapy.Spider):
     def parse_tables(self, response):
         return [
             {
+                "type": "table",
                 "raw": table.extract(),
                 "rows": self.parse_rows(table),
             }
@@ -27,6 +29,7 @@ class MatSpider(scrapy.Spider):
     def parse_rows(self, table):
         return [
             {
+                "type": "row",
                 "raw": row.extract(),
                 "is_header": row.css("th").extract_first() is not None,
                 "fields": self.parse_fields(row),
@@ -37,6 +40,7 @@ class MatSpider(scrapy.Spider):
     def parse_fields(self, row):
         return [
             {
+                "type": "field",
                 "raw": field.extract(),
                 "text": field.css("::text").extract(),
                 "clean": field.css("::text").extract_first().strip(),
@@ -44,6 +48,7 @@ class MatSpider(scrapy.Spider):
             for field in row.css("td")
         ] + [
             {
+                "type": "field",
                 "raw": field.extract(),
                 "text": field.css("::text").extract(),
                 "clean": field.css("::text").extract_first().strip(),
