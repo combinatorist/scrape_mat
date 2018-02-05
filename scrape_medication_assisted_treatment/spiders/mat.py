@@ -9,10 +9,36 @@ class MatSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
+        def parse_fields(row):
+            return [
+                {
+                    "raw": field.extract(),
+                    "text": field.css("::text").extract(),
+                    "clean": field.css("::text").extract_first().strip(),
+                }
+                for field in row.css("td")
+            ]
+
+        def parse_rows(table):
+            return [
+                {
+                    "raw": row.extract(),
+                    "fields": parse_fields(row),
+                }
+                for row in table.css("tr")
+            ]
+
+        def parse_tables(response):
+            return [
+                {
+                    "raw": table.extract(),
+                    "rows": parse_rows(table),
+                }
+                for table in response.css("table.tablesaw")
+            ]
+
         yield {
             "url": response.url,
             "body": response.body.decode(),
-            "table": response.css("table.tablesaw").extract_first(),
-            "rows": response.css("table.tablesaw tr").extract(),
-            "fields": [x.strip() for x in response.css("table.tablesaw tr td::text").extract()],
+            "tables": parse_tables(response)
         }
