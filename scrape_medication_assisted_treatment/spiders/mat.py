@@ -5,10 +5,14 @@ class MatSpider(scrapy.Spider):
     name = "mat"
 
     start_urls=[
-        "https://www.samhsa.gov/medication-assisted-treatment/physician-program-data/treatment-physician-locator?field_bup_physician_us_state_value=TN"
+        "https://www.samhsa.gov/medication-assisted-treatment/physician-program-data/treatment-physician-locator"
     ]
 
     def parse(self, response):
+        for state in response.css("area::attr(href)"):
+            yield response.follow(state, callback=self.parse_state)
+
+    def parse_state(self, response):
         yield {
             "type": "page",
             "url": response.url,
@@ -17,7 +21,7 @@ class MatSpider(scrapy.Spider):
         }
 
         for a in response.css('li.pager__item--next a'):
-            yield response.follow(a, callback=self.parse)
+            yield response.follow(a, callback=self.parse_state)
 
     def parse_tables(self, response):
         return [
